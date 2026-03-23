@@ -41,6 +41,10 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    environment:
+      # Имя сервиса API в той же сети (в Dokploy может отличаться — задать в .env)
+      BACKEND_HOST: ${BACKEND_HOST:-backend}
+      NGINX_RESOLVER: ${NGINX_RESOLVER:-127.0.0.11}
     ports:
       - "${FRONTEND_HOST_PORT:-80}:80"
     networks:

@@ -1,7 +1,4 @@
-# Статика SPA + прокси на API. Имя «backend» — сервис в docker-compose / той же сети.
-#
-# Без resolver + переменной nginx резолвит backend при старте и падает с
-# "host not found in upstream", если фронт поднялся раньше или без общей сети с API.
+# Подставляется при старте контейнера (docker-entrypoint.sh): @BACKEND_HOST@, @NGINX_RESOLVER@
 
 server {
     listen 80;
@@ -14,13 +11,12 @@ server {
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml;
 
-    # Встроенный DNS Docker (см. /etc/resolv.conf в контейнере)
-    resolver 127.0.0.11 valid=10s ipv6=off;
+    # Docker: 127.0.0.11. В K8s/других средах задайте NGINX_RESOLVER (см. /etc/resolv.conf в поде)
+    resolver @NGINX_RESOLVER@ valid=10s ipv6=off;
     resolver_timeout 5s;
 
-    # Пути FastAPI — резолвинг backend при запросе, не при старте nginx
     location ~ ^/(chat|chat-with-system|chat-json|analyze-site|docs|openapi\.json|redoc) {
-        set $backend_host backend;
+        set $backend_host @BACKEND_HOST@;
         proxy_pass http://$backend_host:8000$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
