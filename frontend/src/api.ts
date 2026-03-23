@@ -7,7 +7,8 @@ const baseURL = (() => {
     return String(raw).replace(/\/$/, "");
   }
   if (import.meta.env.DEV) {
-    return "http://127.0.0.1:8000";
+    // Тот же origin, что и Vite — запросы идут на dev-сервер и проксируются (см. vite.config.ts).
+    return "";
   }
   return "";
 })();
