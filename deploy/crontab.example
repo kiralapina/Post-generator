@@ -1,0 +1,14 @@
+# =============================================================================
+# Пример cron: обновление контейнеров каждый час.
+# Подставьте реальный путь к каталогу deploy на сервере.
+#
+# Установка (от root или пользователя с правами на docker):
+#   crontab -e
+# Вставьте строку ниже (одна строка):
+# =============================================================================
+
+0 * * * * /opt/post-generator/deploy/update-containers.sh >> /var/log/post-generator-update.log 2>&1
+
+# Создайте лог-файл при необходимости:
+#   sudo touch /var/log/post-generator-update.log
+#   sudo chown $USER:$USER /var/log/post-generator-update.log

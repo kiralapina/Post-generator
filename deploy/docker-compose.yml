@@ -1,0 +1,53 @@
+# =============================================================================
+# Production на сервере: образы с Docker Hub (не build локально на сервере).
+#
+# Перед первым запуском:
+#   1) Скопируйте этот каталог на сервер (или клонируйте репозиторий).
+#   2) cp .env.example .env и заполните DOCKERHUB_USER, секреты бэкенда.
+#   3) docker login (если образы приватные).
+#
+# Сборка и push образов (на CI или локально, из корня репозитория):
+#   docker build -f backend/Dockerfile.prod -t lapiki/backend:latest ./backend
+#   docker build -f frontend/Dockerfile.prod -t lapiki/frontend:latest ./frontend
+#   docker push lapiki/backend:latest && docker push lapiki/frontend:latest
+#
+# Запуск:
+#   docker compose up -d
+#
+# Имена/теги меняйте через .env: DOCKERHUB_USER, IMAGE_TAG, CONTAINER_PREFIX, сети, порты.
+# =============================================================================
+
+name: postgenerator
+
+services:
+  # --- Backend: FastAPI + Uvicorn ---
+  backend:
+    image: ${DOCKERHUB_USER}/backend:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_PREFIX:-postgen}-backend
+    restart: unless-stopped
+    env_file:
+      # Путь относительно этого docker-compose.yml (каталог deploy/)
+      - .env
+    ports:
+      # Хост:контейнер — смените BACKEND_HOST_PORT при конфликте портов
+      - "${BACKEND_HOST_PORT:-8000}:8000"
+    networks:
+      - app_net
+
+  # --- Frontend: nginx + статика React ---
+  frontend:
+    image: ${DOCKERHUB_USER}/frontend:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_PREFIX:-postgen}-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_HOST_PORT:-80}:80"
+    networks:
+      - app_net
+
+# Общая bridge-сеть: сервисы резолвят друг друга по имени (backend, frontend).
+networks:
+  app_net:
+    driver: bridge
+    name: ${NETWORK_NAME:-postgen_app_net}
