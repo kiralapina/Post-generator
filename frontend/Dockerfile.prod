@@ -1,12 +1,15 @@
 # Production-образ для Docker Hub: статика + nginx, прокси к backend по сети Compose.
 # Сборка из корня репозитория:
 #   docker build -f frontend/Dockerfile.prod -t lapiki/frontend:latest ./frontend
+#
+# Стадия build: node:bookworm-slim (glibc), не alpine — иначе Rollup/Vite часто падают
+# на @rollup/rollup-linux-x64-musl при npm optional deps (см. логи Dokploy/Docker).
 
-FROM node:20-alpine AS build
+FROM node:20-bookworm-slim AS build
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci 2>/dev/null || npm install
+RUN npm ci
 
 COPY . .
 
