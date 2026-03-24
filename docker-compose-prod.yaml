@@ -6,7 +6,8 @@
 #   docker compose -f docker-compose-prod.yaml up -d --build
 #
 # Имена сервисов backend / frontend — DNS в одной сети; для nginx см. BACKEND_URL в .env
-# FRONTEND_HOST_PORT по умолчанию 8080: на хосте :80 часто занят Traefik/Dokploy.
+# Фронт: expose 80 без host-маппинга — Traefik/Dokploy маршрутизирует по внутренней сети.
+# Бэкенд: expose 8000 аналогично. Host-порты задаются через BACKEND_HOST_PORT / FRONTEND_HOST_PORT.
 
 name: postgenerator
 
@@ -30,8 +31,8 @@ services:
       timeout: 5s
       retries: 12
       start_period: 20s
-    ports:
-      - "${BACKEND_HOST_PORT:-8000}:8000"
+    expose:
+      - "8000"
     networks:
       - app_net
 
@@ -47,8 +48,8 @@ services:
       BACKEND_URL: ${BACKEND_URL:-}
       BACKEND_HOST: ${BACKEND_HOST:-backend}
       BACKEND_PORT: "${BACKEND_PORT:-8000}"
-    ports:
-      - "${FRONTEND_HOST_PORT:-8080}:80"
+    expose:
+      - "80"
     networks:
       - app_net
 
