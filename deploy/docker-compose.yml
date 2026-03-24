@@ -1,6 +1,7 @@
 # =============================================================================
 # Production на сервере: образы с Docker Hub (не build локально на сервере).
 # Сборка из исходников на Dokploy: см. docker-compose-prod.yaml в корне репозитория.
+# FRONTEND_HOST_PORT по умолчанию 8080 (хост :80 часто занят Traefik).
 #
 # Перед первым запуском:
 #   1) Скопируйте этот каталог на сервер (или клонируйте репозиторий).
@@ -61,7 +62,7 @@ services:
       BACKEND_HOST: ${BACKEND_HOST:-backend}
       BACKEND_PORT: "${BACKEND_PORT:-8000}"
     ports:
-      - "${FRONTEND_HOST_PORT:-80}:80"
+      - "${FRONTEND_HOST_PORT:-8080}:80"
     networks:
       - app_net
 
