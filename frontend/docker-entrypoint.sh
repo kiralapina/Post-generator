@@ -3,13 +3,20 @@ set -e
 BACKEND_HOST="${BACKEND_HOST:-backend}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 
-# NGINX_RESOLVER: в Docker обычно 127.0.0.11; в K8s/Dokploy — первый nameserver из resolv.conf
-if [ -z "${NGINX_RESOLVER:-}" ]; then
-  NGINX_RESOLVER=$(grep -m1 '^nameserver[[:space:]]' /etc/resolv.conf 2>/dev/null | awk '{print $2}')
-fi
-NGINX_RESOLVER="${NGINX_RESOLVER:-127.0.0.11}"
+# Первый nameserver из resolv.conf (в K8s/Dokploy часто не 127.0.0.11)
+AUTO_NS=$(grep -m1 '^nameserver[[:space:]]' /etc/resolv.conf 2>/dev/null | awk '{print $2}')
 
-echo "[nginx-entrypoint] BACKEND_HOST=${BACKEND_HOST} BACKEND_PORT=${BACKEND_PORT} NGINX_RESOLVER=${NGINX_RESOLVER}" >&2
+# Явный NGINX_RESOLVER (не дефолт Docker) — не трогаем.
+# Иначе: env часто задаёт 127.0.0.11, тогда nginx не резолвит backend вне классического Docker DNS.
+if [ -n "${NGINX_RESOLVER:-}" ] && [ "${NGINX_RESOLVER}" != "127.0.0.11" ]; then
+  :
+elif [ -n "${AUTO_NS}" ]; then
+  NGINX_RESOLVER="${AUTO_NS}"
+else
+  NGINX_RESOLVER="${NGINX_RESOLVER:-127.0.0.11}"
+fi
+
+echo "[nginx-entrypoint] BACKEND_HOST=${BACKEND_HOST} BACKEND_PORT=${BACKEND_PORT} NGINX_RESOLVER=${NGINX_RESOLVER} (AUTO_NS=${AUTO_NS:-none})" >&2
 
 sed \
   -e "s#@BACKEND_HOST@#${BACKEND_HOST}#g" \
