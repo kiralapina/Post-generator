@@ -1,4 +1,4 @@
-# Подставляется при старте контейнера (docker-entrypoint.sh): @BACKEND_HOST@, @NGINX_RESOLVER@
+# Подставляется при старте: @BACKEND_HOST@, @BACKEND_PORT@, @NGINX_RESOLVER@
 
 server {
     listen 80;
@@ -6,18 +6,20 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    error_log /dev/stderr warn;
+    access_log /dev/stdout;
+
     client_max_body_size 25m;
 
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml;
 
-    # Docker: 127.0.0.11. В K8s/других средах задайте NGINX_RESOLVER (см. /etc/resolv.conf в поде)
     resolver @NGINX_RESOLVER@ valid=10s ipv6=off;
     resolver_timeout 5s;
 
     location ~ ^/(chat|chat-with-system|chat-json|analyze-site|docs|openapi\.json|redoc) {
         set $backend_host @BACKEND_HOST@;
-        proxy_pass http://$backend_host:8000$request_uri;
+        proxy_pass http://$backend_host:@BACKEND_PORT@$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
