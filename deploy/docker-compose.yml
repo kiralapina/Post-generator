@@ -55,6 +55,8 @@ services:
       backend:
         condition: service_healthy
     environment:
+      # Если в Dokploy сервис API не называется «backend» — задайте полный URL (см. deploy/.env.example)
+      BACKEND_URL: ${BACKEND_URL:-}
       BACKEND_HOST: ${BACKEND_HOST:-backend}
       BACKEND_PORT: "${BACKEND_PORT:-8000}"
     ports:
